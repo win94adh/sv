@@ -1,350 +1,1328 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Math Rush - Cyberpunk Neon Edition</title>
-<style>
-body {
-  margin: 0;
-  font-family: 'Segoe UI', sans-serif;
-  background: radial-gradient(circle at center, #111, #000);
-  color: white;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  overflow: hidden;
-}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KENDO STRIKE: TACTICAL WARFARE V7.5</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Orbitron:wght@400;700;900&display=swap');
 
-#glow-layer {
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  pointer-events: none;
-  box-shadow: inset 0 0 0px #00ffcc;
-  transition: box-shadow 0.4s ease;
-  z-index: 5;
-}
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-drag: none;
+            outline: none;
+        }
 
-#particleCanvas {
-  position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  pointer-events: none;
-  z-index: 10;
-}
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #020205;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            color: #e0e0e0;
+            font-family: 'Black Han Sans', 'Orbitron', sans-serif;
+        }
 
-#larp-overlay {
-  position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: white;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 100;
-  opacity: 0;
-}
+        #canvasContainer {
+            position: relative;
+            background: #000;
+            padding: 5px;
+            border-radius: 4px;
+            box-shadow: 0 0 80px rgba(0,0,0,1), 0 0 15px rgba(0,255,255,0.03);
+        }
 
-#larp-overlay img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transform: scale(1.5);
-}
+        canvas {
+            display: block;
+            background: radial-gradient(circle at center, #0a0a12 0%, #000000 100%);
+            border: 4px solid #1a1a20;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
 
-.game {
-  position: relative;
-  width: 380px;
-  padding: 20px;
-  border-radius: 25px;
-  background: #1a1a1a;
-  box-shadow: 0 0 30px rgba(0,255,255,0.1);
-  z-index: 20;
-}
+        #controlsGuide {
+            margin-top: 12px;
+            display: flex;
+            gap: 20px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 9px;
+            color: #555;
+            letter-spacing: 0.5px;
+            background: rgba(255,255,255,0.015);
+            padding: 7px 18px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.04);
+            transition: all 0.3s ease;
+        }
 
-.slot-machine {
-  display: flex; justify-content: center; gap: 10px; margin-bottom: 20px;
-  background: #222; padding: 10px; border-radius: 15px; border: 3px solid #444;
-}
+        #controlsGuide:hover { color: #888; border-color: rgba(0,255,255,0.1); }
+        .guide-item span { color: #00aaaa; font-weight: 600; }
 
-.reel { width: 60px; height: 60px; background: #333; border-radius: 10px; overflow: hidden; position: relative; border: 2px solid #555; }
-.reel-strip { position: absolute; width: 100%; text-align: center; top: 0; }
-.slot-item { height: 60px; line-height: 60px; font-size: 30px; }
+        .scanline {
+            width: 100%;
+            height: 80px;
+            z-index: 5;
+            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(255,255,255,0.01) 50%, rgba(0,0,0,0) 100%);
+            opacity: 0.1;
+            position: absolute;
+            bottom: 100%;
+            pointer-events: none;
+            animation: scanline 15s linear infinite;
+        }
 
-.fever-active { border-color: #ffcc00 !important; box-shadow: 0 0 25px #ffcc00; animation: pulse 1s infinite; }
-@keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
-
-.top { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 18px; }
-.timer { color: #00ffcc; font-weight: bold; }
-.score { color: #ffcc00; }
-
-.question { text-align: center; font-size: 36px; margin: 25px 0; font-weight: bold; }
-.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-button { padding: 15px; font-size: 18px; border: none; border-radius: 10px; background: #222; color: white; cursor: pointer; transition: 0.2s; }
-.correct { background: #00cc66 !important; }
-.wrong { background: #cc0033 !important; }
-
-.bottom { margin-top: 20px; display: flex; justify-content: space-between; align-items: center; }
-.combo { color: #00ffcc; font-weight: bold; }
-.hidden { display: none; }
-.big-btn { margin-top: 20px; padding: 15px 30px; font-size: 18px; border-radius: 10px; background: #00ccff; color: black; border: none; cursor: pointer; }
-</style>
+        @keyframes scanline {
+            0% { bottom: 105%; }
+            100% { bottom: -105%; }
+        }
+    </style>
 </head>
 <body>
 
-<div id="glow-layer"></div>
-<canvas id="particleCanvas"></canvas>
-
-<div id="larp-overlay">
-  <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR3a37yK4V_Ew7rS5zX9yP1Y2C2z7R9f6B_8Q&s" id="larp-img">
+<div id="canvasContainer">
+    <div class="scanline"></div>
+    <canvas id="gameCanvas"></canvas>
 </div>
 
-<div class="game">
-  <div class="slot-machine" id="slotMachine">
-    <div class="reel"><div class="reel-strip" id="reel1"></div></div>
-    <div class="reel"><div class="reel-strip" id="reel2"></div></div>
-    <div class="reel"><div class="reel-strip" id="reel3"></div></div>
-  </div>
-
-  <div class="start-screen" id="startScreen">
-    <h1>⚡ Math Rush</h1>
-    <p>제한 시간: 1분</p>
-    <button class="big-btn" onclick="startGame()">시작</button>
-  </div>
-
-  <div class="play-screen hidden" id="playScreen">
-    <div class="top">
-      <div class="timer">⏱ <span id="time">60</span></div>
-      <div class="score">🏆 <span id="score">0</span></div>
-    </div>
-    <div class="question" id="question">1 + 1</div>
-    <div class="choices" id="choices"></div>
-    <div class="bottom">
-      <div class="combo">🔥 COMBO x<span id="combo">0</span></div>
-      <div id="feedback"></div>
-    </div>
-  </div>
-
-  <div class="end-screen hidden" id="endScreen">
-    <h2>🎉 최종 종료</h2>
-    <p>점수: <span id="finalScore"></span></p>
-    <button class="big-btn" onclick="location.reload()">다시하기</button>
-  </div>
+<div id="controlsGuide">
+    <div class="guide-item">P1: <span>WASD</span>(이동) | <span>F</span>(공격) | <span>W</span>(패링) | <span>S</span>(가드) | <span>G</span>(점프) | <span>Q</span>(궁극) | <span>E/R/T</span>(스킬)</div>
+    <div class="guide-item">P2: <span>화살표/IJKL</span>(이동) | <span>O</span>(공격) | <span>I</span>(패링) | <span>K</span>(가드) | <span>U</span>(점프) | <span>P</span>(궁극) | <span>Y/H/N</span>(스킬)</div>
 </div>
 
 <script>
-let score = 0;
-let time = 60;
-let combo = 0;
-let isFever = false;
-let isSecondChance = false;
-let hasResurrected = false;
-let correctAnswer;
-let timer;
-let particles = [];
-let pillars = [];
+/**
+ * ==================================================================================
+ * KENDO STRIKE V7.5 - 전술적 확장판
+ * 신규 시스템: 공격 타입(SLASH/THRUST/OVERHEAD), 스태미나, 가드게이지,
+ *             공중전/넉백, 정교한 검 끝점 히트박스(sin/cos 수학 판정)
+ * ==================================================================================
+ */
 
-const symbols = ['💎', '🍀', '🔥', '🍎', '🔔', '7'];
-const reels = [document.getElementById('reel1'), document.getElementById('reel2'), document.getElementById('reel3')];
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
 
-function initReels() {
-  reels.forEach(reel => {
-    reel.innerHTML = '';
-    for(let i=0; i<40; i++) {
-      let div = document.createElement('div');
-      div.className = 'slot-item';
-      div.textContent = symbols[i % symbols.length];
-      reel.appendChild(div);
+canvas.width = 1000;
+canvas.height = 600;
+
+// ─── 전역 엔진 상태 ───────────────────────────────────────────────────────────
+let currentScene = "MENU";
+let sceneAlpha = 1;
+let sceneTransitioning = false;
+let frameCount = 0;
+let screenShake = 0;
+let hitStop = 0;
+
+const keys = {};
+
+// ─── 물리 및 환경 상수 ────────────────────────────────────────────────────────
+const GRAVITY        = 0.72;   // 중력 가속도 (프레임 기준)
+const FRICTION       = 0.88;   // 지면 마찰 계수
+const GROUND_Y       = 420;    // 지면 Y 좌표
+const PLAYER_W       = 40;     // 캐릭터 너비
+const PLAYER_H       = 65;     // 캐릭터 높이
+const JUMP_FORCE     = -14;    // 점프 초속도
+
+// ─── 스태미나 관련 상수 ────────────────────────────────────────────────────────
+const STAMINA_MAX       = 100; // 스태미나 최대치
+const STAMINA_REGEN     = 12;  // 초당 회복량 (dt 곱해서 사용)
+const STAMINA_ATK_COST  = 18;  // 일반 공격 소모
+const STAMINA_DASH_COST = 10;  // 대시 소모
+const STAMINA_PARRY_COST= 22;  // 패링 소모
+const STAMINA_EXHAUST   = 80;  // 스태미나 고갈 페널티 프레임
+
+// ─── 가드 게이지 관련 상수 ────────────────────────────────────────────────────
+const GUARD_MAX         = 100; // 가드 게이지 최대치
+const GUARD_REGEN       = 8;   // 초당 회복량
+const GUARD_BREAK_STUN  = 120; // 가드 브레이크 스턴 프레임
+
+// ─── 오브젝트 풀 ──────────────────────────────────────────────────────────────
+const particles     = [];
+const floatingTexts = [];
+
+// ─── UI 버튼 ──────────────────────────────────────────────────────────────────
+const UI_BUTTONS = {
+    MENU_START: { x: 400, y: 450, w: 200, h: 45, text: "INITIATE DUEL" },
+    RETRY:      { x: 430, y: 430, w: 140, h: 40, text: "REMATCH" }
+};
+
+/**
+ * ==================================================================================
+ * [2] 무기 데이터베이스 V7.5
+ *     신규 속성: type (SLASH/THRUST/OVERHEAD), weight, staminaCost
+ * ==================================================================================
+ */
+// 공격 타입 열거형
+const ATK_TYPE = { SLASH: "SLASH", THRUST: "THRUST", OVERHEAD: "OVERHEAD" };
+
+const WEAPONS = [
+    {
+        name: "죽도 (SHINAI)",   color: "#e5c07b", power: 6,  speed: 19,
+        bladeL: 78, bladeW: 5,   atkSpd: 0.08,
+        type: ATK_TYPE.SLASH,    weight: 1.0, staminaCost: 14,
+        skills: ["잔상 대시", "점혈 찌르기", "바람의 막", "심기체 일전 (ULT)"],
+        sDesc: "신속한 기동과 연격. 궁극기는 적의 방어를 무시합니다.",
+        cooldowns: [4000,6000,9000,24000]
+    },
+    {
+        name: "목검 (BOKKEN)",   color: "#8b5a2b", power: 13, speed: 10,
+        bladeL: 70, bladeW: 10,  atkSpd: 0.04,
+        type: ATK_TYPE.OVERHEAD, weight: 2.5, staminaCost: 22,
+        skills: ["어깨 치기", "대지 가르기", "철갑 태세", "파성 붕괴 (ULT)"],
+        sDesc: "묵직한 한 방. 가드를 강제로 깨트립니다.",
+        cooldowns: [6500,9500,13000,30000]
+    },
+    {
+        name: "명검 (KATANA)",   color: "#ffffff", power: 10, speed: 16,
+        bladeL: 82, bladeW: 4,   atkSpd: 0.06,
+        type: ATK_TYPE.SLASH,    weight: 1.5, staminaCost: 17,
+        skills: ["잔영 베기", "발도 준비", "명경지수", "천상용섬 (ULT)"],
+        sDesc: "정교한 검술. 궁극기는 눈에 보이지 않는 속도로 공간을 벱니다.",
+        cooldowns: [5500,8000,14000,28000]
+    },
+    {
+        name: "레이피어 (RAPIER)", color: "#a8d8ff", power: 8, speed: 25,
+        bladeL: 92, bladeW: 3,   atkSpd: 0.12,
+        type: ATK_TYPE.THRUST,   weight: 0.8, staminaCost: 12,
+        skills: ["플뢰레 스텝", "삼연 점차", "도발의 우아함", "은하 십자성 (ULT)"],
+        sDesc: "압도적 속도. 찌르기 판정으로 좁은 틈도 꿰뚫습니다.",
+        cooldowns: [3500,5500,11000,21000]
+    },
+    {
+        name: "클레이모어 (GREATSWORD)", color: "#9da3a8", power: 20, speed: 3,
+        bladeL: 118, bladeW: 14, atkSpd: 0.025,
+        type: ATK_TYPE.OVERHEAD, weight: 4.0, staminaCost: 30,
+        skills: ["휠 윈드", "거암 파쇄", "불굴의 의지", "심판의 낙뢰 (ULT)"],
+        sDesc: "파괴의 상징. 내려치기로 가드 게이지를 2배로 깎습니다.",
+        cooldowns: [10000,13000,22000,36000]
+    },
+    {
+        name: "다마스쿠스 (DAGGER)", color: "#4d4d5e", power: 9, speed: 22,
+        bladeL: 74, bladeW: 5,   atkSpd: 0.09,
+        type: ATK_TYPE.THRUST,   weight: 0.9, staminaCost: 13,
+        skills: ["그림자 보법", "환영 투척", "연막 기습", "심연의 처형 (ULT)"],
+        sDesc: "기만과 암살. 찌르기로 짧은 판정 내 치명타를 유발합니다.",
+        cooldowns: [4500,7500,15000,25000]
+    },
+    {
+        name: "샴쉬르 (SCIMITAR)", color: "#ffd700", power: 9, speed: 20,
+        bladeL: 86, bladeW: 4,   atkSpd: 0.075,
+        type: ATK_TYPE.SLASH,    weight: 1.3, staminaCost: 16,
+        skills: ["춤추는 칼날", "신기루 환영", "열풍 베기", "황금 사막폭풍 (ULT)"],
+        sDesc: "화려한 곡선. 베기 궤적이 가장 넓어 다단 히트를 유발합니다.",
+        cooldowns: [5000,7000,12000,26000]
+    },
+    {
+        name: "노다치 (ODACHI)", color: "#c0c0c0", power: 16, speed: 3,
+        bladeL: 135, bladeW: 6,  atkSpd: 0.035,
+        type: ATK_TYPE.OVERHEAD, weight: 3.5, staminaCost: 28,
+        skills: ["수평 베기", "달빛 가르기", "심상 명상", "낙월무간 (ULT)"],
+        sDesc: "극강의 사거리. 내려치기 넉백이 화면 끝까지 밀어냅니다.",
+        cooldowns: [11000,12000,20000,34000]
     }
-  });
+];
+
+// ─── 다중 키 체크 헬퍼 ────────────────────────────────────────────────────────
+function isKeyDown(kb) {
+    return Array.isArray(kb) ? kb.some(c => keys[c]) : keys[kb];
 }
 
-function spinSlots() {
-  const isJackpot = Math.random() < 0.3;
-  reels.forEach((reel, i) => {
-    let targetIndex = isJackpot ? symbols.indexOf('7') : Math.floor(Math.random() * symbols.length);
-    const move = (30 + targetIndex) * 60; 
-    reel.style.transition = `transform ${0.6 + i * 0.3}s cubic-bezier(0.23, 1, 0.32, 1)`;
-    reel.style.transform = `translateY(-${move}px)`;
-  });
-  return isJackpot;
+/**
+ * ==================================================================================
+ * [3] 플레이어 클래스 V7.5
+ *     신규: stamina, guardGauge, isAirAttacking, knockback 처리
+ * ==================================================================================
+ */
+class Player {
+    constructor(x, color, controls, isP2) {
+        this.controls = controls;
+        this.isP2 = isP2;
+        this.baseColor = color;
+
+        // 검 관성 및 애니메이션 변수
+        this.swordAngle = -Math.PI / 3;
+        this.targetSwordAngle = -Math.PI / 3;
+        this.swordLean = 0;
+
+        this.init(x);
+    }
+
+    init(x) {
+        this.x = x;
+        this.y = GROUND_Y;
+        this.velX = 0;
+        this.velY = 0;
+
+        this.hp = 100;
+        this.displayHp = 100;
+
+        // ─── V7.5 신규 전술 게이지 ────────────────────────────────────────
+        this.stamina = STAMINA_MAX;         // 스태미나 (공격/대시/패링 소모)
+        this.displayStamina = STAMINA_MAX;  // 부드러운 UI용 표시값
+        this.staminaExhausted = false;      // 고갈 상태 플래그
+        this.exhaustTimer = 0;              // 고갈 지속 타이머
+
+        this.guardGauge = GUARD_MAX;        // 가드 게이지
+        this.displayGuardGauge = GUARD_MAX; // 부드러운 UI용 표시값
+        this.isGuardBroken = false;         // 가드 브레이크 상태
+
+        // ─── 공중전 상태 ──────────────────────────────────────────────────
+        this.isOnGround = true;             // 지면 접촉 여부
+        this.isAirAttacking = false;        // 공중 공격 상태 (AIR_ATTACK)
+        this.jumpCount = 0;                 // 점프 횟수 (이단 점프 제한)
+
+        this.selIdx = this.isP2 ? 7 : 0;
+        this.locked = false;
+        this.weapon = null;
+        this.weaponGradient = null;
+
+        // ─── 공격 상태 머신 ───────────────────────────────────────────────
+        this.attackPhase = "ready";         // ready / swing / recovery
+        this.attackAnim = 0;
+        this.attackDelay = 0;
+        this.currentAttackType = ATK_TYPE.SLASH; // 현재 공격의 타입
+
+        this.stunTimer = 0;
+        this.hitTimer = 0;
+        this.skillTimer = 0;
+
+        this.isGuarding = false;
+        this.isInvincible = false;
+        this.stealth = false;
+
+        // ─── 패링 시스템 ──────────────────────────────────────────────────
+        this.isParrying = false;
+        this.parryCooldown = 0;
+        this.parryWindow = 0;
+
+        this.cooldowns = [0, 0, 0, 0];
+        this.afterImages = [];
+    }
+
+    /** 무기 설정 + 그라디언트 캐싱 */
+    setWeapon(wd) {
+        this.weapon = wd;
+        let g = ctx.createLinearGradient(16, 0, 16 + wd.bladeL, 0);
+        g.addColorStop(0, "#2a2a30");
+        g.addColorStop(0.4, wd.color);
+        g.addColorStop(1, "#ffffff");
+        this.weaponGradient = g;
+    }
+
+    /**
+     * 메인 업데이트 (Delta Time 적용)
+     * 상태 우선순위: 사망 → 히트스톱 → 스턴 → 고갈 → 일반 조작
+     */
+    update(dt) {
+        if (currentScene !== "BATTLE" || this.hp <= 0) return;
+
+        // ── 부드러운 UI 수치 보간 ────────────────────────────────────────
+        this.displayHp          += (this.hp          - this.displayHp)          * 0.045 * dt;
+        this.displayStamina     += (this.stamina     - this.displayStamina)     * 0.055 * dt;
+        this.displayGuardGauge  += (this.guardGauge  - this.displayGuardGauge)  * 0.055 * dt;
+
+        // ── 쿨타임 카운트다운 ─────────────────────────────────────────────
+        if (this.attackDelay  > 0) this.attackDelay  -= dt;
+        if (this.parryCooldown> 0) this.parryCooldown -= dt;
+        for (let i = 0; i < 4; i++) {
+            if (this.cooldowns[i] > 0) this.cooldowns[i] -= dt;
+        }
+
+        // ── 스태미나 회복 (고갈 해제 후) ─────────────────────────────────
+        if (this.staminaExhausted) {
+            this.exhaustTimer -= dt;
+            if (this.exhaustTimer <= 0) this.staminaExhausted = false;
+        } else {
+            this.stamina = Math.min(STAMINA_MAX, this.stamina + (STAMINA_REGEN / 60) * dt);
+        }
+
+        // ── 가드 게이지 회복 (가드 안 할 때) ─────────────────────────────
+        if (!this.isGuarding && !this.isGuardBroken) {
+            this.guardGauge = Math.min(GUARD_MAX, this.guardGauge + (GUARD_REGEN / 60) * dt);
+        }
+        if (this.isGuardBroken && this.stunTimer <= 0) {
+            this.isGuardBroken = false;
+        }
+
+        // ── [상태1] 스턴: 모든 조작 불능 ─────────────────────────────────
+        if (this.stunTimer > 0) {
+            this.stunTimer -= dt;
+            this.isParrying = false;
+            this.isGuarding = false;
+            this.targetSwordAngle = Math.PI * 0.55;
+            this.applyPhysics(dt);
+            this.updateSwordMotion(dt);
+            return;
+        }
+
+        // ── [상태2] 패링 윈도우 처리 ─────────────────────────────────────
+        if (this.isParrying) {
+            this.parryWindow -= dt;
+            if (this.parryWindow <= 0) {
+                this.isParrying = false;
+                this.stunTimer = 45;
+                this.parryCooldown = 320;
+                floatingTexts.push(new FloatingText(this.x + PLAYER_W/2, this.y - 30, "OPEN!", "#ff3300", 16));
+                spawnParticles(this.x + PLAYER_W/2, this.y + PLAYER_H/2, "#ff3300", 6);
+            }
+        }
+
+        // ── [상태3] 가드 ─────────────────────────────────────────────────
+        this.isGuarding = isKeyDown(this.controls.down) && this.skillTimer <= 0 && !this.isParrying && !this.staminaExhausted;
+
+        // ── [상태4] 패링 시도 ─────────────────────────────────────────────
+        if (isKeyDown(this.controls.up) && this.parryCooldown <= 0 && !this.isParrying && this.attackPhase === "ready" && !this.staminaExhausted) {
+            if (this.stamina >= STAMINA_PARRY_COST) {
+                this.stamina -= STAMINA_PARRY_COST;
+                this.startParry();
+            }
+        }
+
+        // ── [상태5] 점프 입력 ─────────────────────────────────────────────
+        if (isKeyDown(this.controls.jump) && this.jumpCount < 1 && !this.isParrying && !this.isGuarding) {
+            this._jumpPressed = this._jumpPressed || false;
+            if (!this._jumpPressed) {
+                this._jumpPressed = true;
+                this.velY = JUMP_FORCE;
+                this.isOnGround = false;
+                this.jumpCount++;
+                // 스태미나는 점프에서는 소모하지 않음 (공중전 활성화)
+            }
+        } else {
+            this._jumpPressed = false;
+        }
+
+        // ── [상태6] 기동 제어 ─────────────────────────────────────────────
+        if (this.skillTimer <= 0 && !this.isParrying) {
+            let moveSpd = this.isGuarding ? 1.5 : (this.weapon.speed * 0.28 + 4.3);
+
+            if (isKeyDown(this.controls.left)) {
+                // 대시 스태미나 소모 (빠른 이동 시)
+                if (Math.abs(this.velX) < moveSpd - 0.5 && this.stamina >= STAMINA_DASH_COST * 0.02) {
+                    this.stamina = Math.max(0, this.stamina - STAMINA_DASH_COST * 0.02);
+                }
+                this.velX = -moveSpd;
+            } else if (isKeyDown(this.controls.right)) {
+                if (Math.abs(this.velX) < moveSpd - 0.5 && this.stamina >= STAMINA_DASH_COST * 0.02) {
+                    this.stamina = Math.max(0, this.stamina - STAMINA_DASH_COST * 0.02);
+                }
+                this.velX = moveSpd;
+            } else {
+                this.velX *= Math.pow(FRICTION, dt);
+            }
+        } else if (!this.isParrying) {
+            this.velX *= Math.pow(FRICTION, dt);
+        }
+
+        this.applyPhysics(dt);
+
+        // ── [상태7] 공격 및 스킬 입력 ────────────────────────────────────
+        if (!this.isGuarding && !this.isParrying && this.skillTimer <= 0 && !this.staminaExhausted) {
+            // 일반 공격: 지상 또는 공중
+            if (isKeyDown(this.controls.attack) && this.attackPhase === "ready" && this.attackDelay <= 0) {
+                if (this.stamina >= this.weapon.staminaCost) {
+                    this.stamina -= this.weapon.staminaCost;
+                    // 스태미나 고갈 체크
+                    if (this.stamina <= 0) {
+                        this.stamina = 0;
+                        this.staminaExhausted = true;
+                        this.exhaustTimer = STAMINA_EXHAUST;
+                    }
+                    // 공중 공격 판별
+                    if (!this.isOnGround) {
+                        this.isAirAttacking = true;
+                        this.performAttack("swing", 20, this.weapon.power * 1.15, false, this.weapon.type);
+                    } else {
+                        this.isAirAttacking = false;
+                        this.performAttack("swing", 30, this.weapon.power, false, this.weapon.type);
+                    }
+                } else {
+                    // 스태미나 부족 경고
+                    floatingTexts.push(new FloatingText(this.x + PLAYER_W/2, this.y - 40, "EXHAUSTED!", "#ff6600", 13));
+                }
+            }
+            if (isKeyDown(this.controls.skill1) && this.cooldowns[0] <= 0) this.useSkill(0);
+            if (isKeyDown(this.controls.skill2) && this.cooldowns[1] <= 0) this.useSkill(1);
+            if (isKeyDown(this.controls.ult)    && this.cooldowns[2] <= 0) this.useSkill(2);
+            if (isKeyDown(this.controls.special) && this.cooldowns[3] <= 0) this.useSkill(3);
+        }
+
+        // 착지 시 공중 공격 해제
+        if (this.isOnGround) this.isAirAttacking = false;
+
+        // ── 검 애니메이션 업데이트 ────────────────────────────────────────
+        this.updateSwordMotion(dt);
+
+        // ── 잔상 시스템 ───────────────────────────────────────────────────
+        if (Math.abs(this.velX) > 6.5 || this.isParrying || (this.attackPhase === "swing" && this.attackAnim > 0.35)) {
+            if (frameCount % 4 === 0) {
+                this.afterImages.push({ x: this.x, y: this.y, angle: this.swordAngle, lean: this.swordLean, life: 28 });
+            }
+        }
+        this.afterImages.forEach((img, i) => {
+            img.life -= dt;
+            if (img.life <= 0) this.afterImages.splice(i, 1);
+        });
+
+        if (this.skillTimer > 0) this.skillTimer -= dt;
+        if (this.hitTimer   > 0) this.hitTimer   -= dt;
+    }
+
+    startParry() {
+        this.isParrying = true;
+        this.parryWindow = 16;
+        this.targetSwordAngle = -Math.PI / 15;
+        this.swordAngle = -Math.PI * 0.7;
+        spawnParticles(this.x + PLAYER_W/2, this.y + 30, "#00ffff", 5);
+    }
+
+    successParry(attacker) {
+        this.isParrying = false;
+        this.parryWindow = 0;
+        this.parryCooldown = 0;
+
+        attacker.stunTimer = 85;
+        attacker.velX = (attacker.x > this.x ? 1 : -1) * 15;
+        attacker.attackPhase = "ready";
+        attacker.attackAnim = 0;
+
+        hitStop = 28;
+        screenShake = 30;
+        spawnParticles(this.x + PLAYER_W/2, this.y + PLAYER_H/2, "#00ffff", 45);
+        floatingTexts.push(new FloatingText(this.x + PLAYER_W/2, this.y - 65, "TACTICAL COUNTER", "#00ffff", 22));
+        this.targetSwordAngle = -Math.PI / 2;
+    }
+
+    /**
+     * 검 애니메이션: 공격 타입에 따른 궤적 분기
+     * SLASH   : 수평 호 (기존)
+     * THRUST  : 직선 찌르기 (각도 변화 작음, 빠름)
+     * OVERHEAD: 위에서 아래로 내려치기 (각도 변화 크고 느림)
+     */
+    updateSwordMotion(dt) {
+        // 관성에 의한 검 쏠림
+        let leanFactor = -(this.velX * 0.085);
+        this.swordLean += (leanFactor - this.swordLean) * 0.14 * dt;
+
+        if (this.isParrying) {
+            this.targetSwordAngle = 0;
+        } else if (this.attackPhase === "ready") {
+            this.targetSwordAngle = this.isGuarding ? 0.08 : -Math.PI / 3;
+        } else if (this.attackPhase === "swing") {
+            this.attackAnim += this.weapon.atkSpd * dt;
+            let prog = Math.sin(this.attackAnim * Math.PI / 2);
+
+            // 공격 타입별 궤적 계산
+            if (this.currentAttackType === ATK_TYPE.THRUST) {
+                // 찌르기: 각도 변화 최소화, 앞쪽으로 직선 돌진 느낌
+                this.targetSwordAngle = (-Math.PI / 4) + (Math.PI * 0.2 * prog);
+            } else if (this.currentAttackType === ATK_TYPE.OVERHEAD) {
+                // 내려치기: 위(-π) → 아래(+π/3) 큰 호
+                this.targetSwordAngle = -Math.PI + (Math.PI * 1.8 * prog);
+            } else {
+                // 베기(기본): 수평 호
+                this.targetSwordAngle = (-Math.PI / 3) + (Math.PI * 1.55 * prog);
+            }
+
+            if (this.attackAnim >= 1) this.attackPhase = "recovery";
+        } else if (this.attackPhase === "recovery") {
+            this.attackAnim -= (this.weapon.atkSpd * 0.35) * dt;
+            let prog = Math.pow(this.attackAnim, 2);
+
+            if (this.currentAttackType === ATK_TYPE.THRUST) {
+                this.targetSwordAngle = (-Math.PI / 4) + (Math.PI * 0.2 * prog);
+            } else if (this.currentAttackType === ATK_TYPE.OVERHEAD) {
+                this.targetSwordAngle = -Math.PI + (Math.PI * 1.8 * prog);
+            } else {
+                this.targetSwordAngle = (-Math.PI / 3) + (Math.PI * 1.55 * prog);
+            }
+
+            if (this.attackAnim <= 0) {
+                this.attackAnim = 0;
+                this.attackPhase = "ready";
+                this.attackDelay = 20;
+                this.isAirAttacking = false;
+            }
+        }
+
+        this.swordAngle += (this.targetSwordAngle - this.swordAngle) * 0.18 * dt;
+    }
+
+    applyPhysics(dt) {
+        this.x += this.velX * dt;
+        this.y += this.velY * dt;
+
+        if (this.y < GROUND_Y) {
+            this.velY += GRAVITY * dt;
+            this.isOnGround = false;
+        } else {
+            this.y = GROUND_Y;
+            this.velY = 0;
+            this.isOnGround = true;
+            this.jumpCount = 0; // 착지 시 점프 횟수 초기화
+        }
+
+        this.x = Math.max(0, Math.min(canvas.width - PLAYER_W, this.x));
+    }
+
+    performAttack(phase, rangeBonus, dmg, isGB, atkType) {
+        this.attackPhase = phase;
+        this.currentAttackType = atkType || this.weapon.type;
+        this.checkCollisionTipBased(this.weapon.bladeL + rangeBonus, dmg, isGB);
+    }
+
+    /**
+     * ──────────────────────────────────────────────────────────────────────
+     * 정교한 검 끝점(Tip) 히트박스 계산 (V7.5 핵심 신기능)
+     *
+     * 원리:
+     *   1. 검 손잡이의 세계 좌표(hiltX, hiltY)를 캐릭터 좌표에서 계산한다.
+     *   2. 현재 swordAngle과 bladeL(검 길이)을 이용해 sin/cos로
+     *      검 끝점(tipX, tipY)의 절대 좌표를 구한다.
+     *   3. 끝점이 상대방의 피격 박스(hitbox) 안에 있으면 명중으로 판정한다.
+     *   4. 공격 타입에 따라 판정 기준이 달라진다:
+     *      - THRUST   : 끝점만 체크 (좁고 깊음)
+     *      - SLASH    : 끝점 + 검 중간점도 체크 (넓은 호)
+     *      - OVERHEAD : 끝점 + 어깨 높이 범위 체크 (수직 판정 추가)
+     * ──────────────────────────────────────────────────────────────────────
+     */
+    checkCollisionTipBased(bladeRange, dmg, isGB) {
+        const target = this.isP2 ? p1 : p2;
+
+        // ── 손잡이 세계 좌표 계산 ─────────────────────────────────────────
+        // 캐릭터 중심에서 손잡이까지의 로컬 오프셋 (draw()와 동일한 기준점)
+        const pivotLocalX = 15;  // 손잡이 X 오프셋 (캐릭터 중심 기준)
+        const pivotLocalY = -55; // 손잡이 Y 오프셋
+
+        // P2는 좌우 반전이므로 방향 계수 적용
+        const dir = this.isP2 ? -1 : 1;
+
+        // 세계 좌표: 캐릭터 원점(x+20, y+80) + 로컬 오프셋(방향 반전 적용)
+        const hiltX = (this.x + 20) + pivotLocalX * dir;
+        const hiltY = (this.y + 80) + pivotLocalY;
+
+        // ── 현재 검 각도 (P2는 반전) ──────────────────────────────────────
+        // swordLean(관성 쏠림)도 반영한 실제 렌더 각도
+        const actualAngle = this.isP2
+            ? -(this.swordAngle - this.swordLean)
+            :  (this.swordAngle + this.swordLean);
+
+        // ── 끝점(Tip) 좌표: 손잡이에서 bladeL만큼 actualAngle 방향으로 이동 ──
+        // tipX = hiltX + cos(angle) * bladeL
+        // tipY = hiltY + sin(angle) * bladeL
+        const tipX = hiltX + Math.cos(actualAngle) * bladeRange;
+        const tipY = hiltY + Math.sin(actualAngle) * bladeRange;
+
+        // ── 검 중간점(Mid) 좌표: SLASH 판정에서 추가 사용 ────────────────
+        const midX = hiltX + Math.cos(actualAngle) * (bladeRange * 0.55);
+        const midY = hiltY + Math.sin(actualAngle) * (bladeRange * 0.55);
+
+        // ── 상대방 피격 박스 정의 ──────────────────────────────────────────
+        // (캐릭터 x, y는 발 기준이므로 실제 박스는 위쪽)
+        const tHitLeft   = target.x;
+        const tHitRight  = target.x + PLAYER_W;
+        const tHitTop    = target.y + 80 - PLAYER_H - 20; // 머리 위까지 포함
+        const tHitBottom = target.y + 80 + 5;             // 발 약간 아래까지
+
+        /**
+         * 포인트(px, py)가 피격 박스 안에 있는지 판별하는 인라인 함수
+         * @param {number} px - 검사할 X 좌표
+         * @param {number} py - 검사할 Y 좌표
+         */
+        const isInHitbox = (px, py) =>
+            px >= tHitLeft && px <= tHitRight &&
+            py >= tHitTop  && py <= tHitBottom;
+
+        // ── 공격 타입별 명중 판정 ──────────────────────────────────────────
+        let hit = false;
+
+        if (this.currentAttackType === ATK_TYPE.THRUST) {
+            // 찌르기: 끝점만 정밀 체크 (좁고 깊은 범위)
+            hit = isInHitbox(tipX, tipY);
+        } else if (this.currentAttackType === ATK_TYPE.SLASH) {
+            // 베기: 끝점 + 중간점 체크 (넓은 호 반영)
+            hit = isInHitbox(tipX, tipY) || isInHitbox(midX, midY);
+        } else if (this.currentAttackType === ATK_TYPE.OVERHEAD) {
+            // 내려치기: 끝점 + 세로 범위 넓힘 (Y 방향으로 ±15px 허용)
+            hit = isInHitbox(tipX, tipY) ||
+                  isInHitbox(tipX, tipY - 15) ||
+                  isInHitbox(tipX, tipY + 15);
+        }
+
+        if (!hit) return; // 명중하지 않으면 종료
+
+        // ── 명중 처리 ─────────────────────────────────────────────────────
+        if (target.isParrying) {
+            target.successParry(this);
+        } else {
+            target.takeDamage(dmg, isGB, this);
+        }
+    }
+
+    useSkill(idx) {
+        const w = this.weapon;
+        this.cooldowns[idx] = Math.floor(w.cooldowns[idx] / 16.6);
+        this.skillTimer = 55;
+        this.stealth = false;
+
+        if (idx === 2) { // 궁극기
+            screenShake = 45;
+            this.skillTimer = 95;
+            floatingTexts.push(new FloatingText(this.x + PLAYER_W/2, this.y - 110, w.skills[3], w.color, 28));
+        } else {
+            floatingTexts.push(new FloatingText(this.x + PLAYER_W/2, this.y - 80, w.skills[idx], "#ffffff", 14));
+        }
+
+        if (idx === 3) {
+            if (w.name.includes("노다치")) {
+                this.hp = Math.min(100, this.hp + 12);
+                spawnParticles(this.x + PLAYER_W/2, this.y + PLAYER_H/2, "#2ecc71", 10);
+            } else if (w.name.includes("목검")) {
+                this.isInvincible = true;
+                setTimeout(() => this.isInvincible = false, 2500);
+            } else if (w.name.includes("다마스쿠스")) {
+                this.stealth = true;
+                this.skillTimer = 25;
+            } else if (w.name.includes("죽도")) {
+                this.checkCollisionTipBased(320, 0, false);
+            }
+        }
+
+        this.performAttack("swing", 110, w.power * (idx === 2 ? 2.1 : 1.45), idx === 1, w.type);
+    }
+
+    /**
+     * 피해 처리: 가드 게이지, 넉백, 스태미나 연동
+     * @param {number} dmg      - 원래 데미지
+     * @param {boolean} isGB    - 가드 브레이크 공격 여부
+     * @param {Player} attacker - 공격자
+     */
+    takeDamage(dmg, isGB, attacker) {
+        if (this.isInvincible) return;
+
+        // ── 가드 처리 ─────────────────────────────────────────────────────
+        if (this.isGuarding && !this.isGuardBroken) {
+            let guardDmg = dmg;
+
+            // OVERHEAD(내려치기)는 가드 게이지를 2배로 소모
+            if (attacker.currentAttackType === ATK_TYPE.OVERHEAD) guardDmg *= 2;
+
+            this.guardGauge -= guardDmg;
+
+            if (this.guardGauge <= 0) {
+                // ── 가드 브레이크 ─────────────────────────────────────────
+                this.guardGauge = 0;
+                this.isGuardBroken = true;
+                this.isGuarding = false;
+                this.stunTimer = GUARD_BREAK_STUN;
+                floatingTexts.push(new FloatingText(this.x + PLAYER_W/2, this.y - 50, "GUARD BREAK!", "#ffaa00", 22));
+                screenShake = 40;
+                hitStop = 20;
+                spawnParticles(this.x + PLAYER_W/2, this.y + PLAYER_H/2, "#ffaa00", 30);
+
+                // 가드 브레이크 시 실피해 적용
+                let breakDmg = isGB ? dmg : dmg * 0.3;
+                this.hp = Math.max(0, this.hp - breakDmg);
+            } else {
+                // 가드 성공: 극소 피해
+                let actualDmg = isGB ? dmg : dmg * 0.12;
+                this.hp = Math.max(0, this.hp - actualDmg);
+            }
+        } else {
+            // ── 직접 피격 ─────────────────────────────────────────────────
+            this.hp = Math.max(0, this.hp - dmg);
+        }
+
+        // ── 넉백 계산: 무기 weight × 공격력에 비례 ────────────────────────
+        // 넉백 방향: 공격자가 왼쪽에 있으면 피격자는 오른쪽으로, 반대도 동일
+        const knockbackDir  = (this.x > attacker.x) ? 1 : -1;
+        const knockbackForce = (attacker.weapon.bladeW * 0.3 + dmg * 0.4) * attacker.weapon.weight;
+        this.velX = knockbackDir * Math.min(knockbackForce, 28); // 최대 28로 캡
+
+        // 넉백 시 살짝 공중으로 (넉백 크면 에어본)
+        if (knockbackForce > 12 && this.isOnGround) {
+            this.velY = -4;
+            this.isOnGround = false;
+        }
+
+        this.hitTimer = 18;
+        hitStop = isGB ? 16 : 8;
+        screenShake = isGB ? 32 : 12;
+
+        spawnParticles(this.x + PLAYER_W/2, this.y + PLAYER_H/2, this.hp <= 0 ? "#ff0000" : "#ffffff", 18);
+    }
+
+    draw() {
+        // ── 잔상 ──────────────────────────────────────────────────────────
+        this.afterImages.forEach(img => {
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, img.life / 28) * 0.5;
+            ctx.fillStyle = this.baseColor;
+            ctx.translate(img.x + 20, img.y + 80);
+            if (this.isP2) ctx.scale(-1, 1);
+            ctx.fillRect(-18, -72, 36, 62);
+            ctx.restore();
+        });
+
+        // ── 캐릭터 본체 ───────────────────────────────────────────────────
+        ctx.save();
+        ctx.translate(this.x + 20, this.y + 80);
+        if (this.isP2) ctx.scale(-1, 1);
+        if (this.stealth) ctx.globalAlpha = 0.08;
+
+        // 상태에 따른 색상: 피격 → 패링 → 무적 → 가드브레이크 → 기본
+        let bodyColor = "#0c0c12";
+        if (this.hitTimer > 0)       bodyColor = "#ffffff";
+        else if (this.isParrying)    bodyColor = "#00ffff";
+        else if (this.isInvincible)  bodyColor = "#ffd700";
+        else if (this.isGuardBroken) bodyColor = "#ff4400";
+
+        ctx.fillStyle = bodyColor;
+        ctx.fillRect(-PLAYER_W/2, -75, PLAYER_W, PLAYER_H);
+
+        // 공중 상태 표시 (발 아래 그림자 없어짐으로 구분)
+        if (!this.isOnGround) {
+            ctx.strokeStyle = "rgba(255,255,255,0.3)";
+            ctx.lineWidth = 1;
+            ctx.setLineDash([4, 4]);
+            ctx.strokeRect(-PLAYER_W/2, -75, PLAYER_W, PLAYER_H);
+            ctx.setLineDash([]);
+        }
+
+        ctx.fillStyle = "#fbdcc2"; // 머리
+        ctx.fillRect(-16, -100, 32, 32);
+
+        // ── 무기 드로잉 ───────────────────────────────────────────────────
+        const w = (currentScene === "SELECT") ? WEAPONS[this.selIdx] : this.weapon;
+        if (w) {
+            ctx.save();
+            ctx.translate(15, -55);
+            ctx.rotate(this.swordAngle + (this.isP2 ? -this.swordLean : this.swordLean));
+
+            ctx.fillStyle = "#2d1b0f";
+            ctx.fillRect(-12, -7, 26, 14);
+
+            if (currentScene === "BATTLE" && this.weaponGradient) {
+                ctx.fillStyle = this.weaponGradient;
+            } else {
+                let g = ctx.createLinearGradient(16, 0, 16 + w.bladeL, 0);
+                g.addColorStop(0, "#2a2a30");
+                g.addColorStop(0.4, w.color);
+                g.addColorStop(1, "#ffffff");
+                ctx.fillStyle = g;
+            }
+
+            // 공격 타입별 글로우 색상
+            let glowColor = w.color;
+            if (this.currentAttackType === ATK_TYPE.THRUST)   glowColor = "#88ccff";
+            if (this.currentAttackType === ATK_TYPE.OVERHEAD) glowColor = "#ff8800";
+
+            ctx.shadowBlur  = (this.attackPhase === "swing" || this.isParrying) ? 35 : 5;
+            ctx.shadowColor = this.isParrying ? "#00ffff" : glowColor;
+
+            ctx.fillRect(16, -w.bladeW/2, w.bladeL, w.bladeW);
+
+            // 공중 공격 중: 검 끝에 추가 이펙트
+            if (this.isAirAttacking && this.attackPhase === "swing") {
+                ctx.fillStyle = "rgba(255,255,100,0.8)";
+                ctx.beginPath();
+                ctx.arc(16 + w.bladeL, 0, 6, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+        }
+
+        // ── 가드 / 패링 표시 ──────────────────────────────────────────────
+        if (this.isGuarding) {
+            // 가드 게이지에 비례한 투명도
+            let alpha = 0.2 + 0.4 * (this.guardGauge / GUARD_MAX);
+            ctx.strokeStyle = `rgba(0, 200, 255, ${alpha})`;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.arc(20, -40, 62, -Math.PI/2, Math.PI/2);
+            ctx.stroke();
+        }
+        if (this.isParrying) {
+            ctx.strokeStyle = "#00ffff";
+            ctx.lineWidth = 4;
+            ctx.setLineDash([8, 4]);
+            ctx.beginPath();
+            ctx.arc(20, -40, 66, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        // ── 스태미나 고갈 표시 ────────────────────────────────────────────
+        if (this.staminaExhausted) {
+            ctx.strokeStyle = `rgba(255, 100, 0, ${0.4 + 0.3 * Math.sin(frameCount * 0.3)})`;
+            ctx.lineWidth = 3;
+            ctx.strokeRect(-PLAYER_W/2 - 3, -78, PLAYER_W + 6, PLAYER_H + 6);
+        }
+
+        ctx.restore();
+    }
 }
 
-const canvas = document.getElementById('particleCanvas');
-const ctx = canvas.getContext('2d');
-const glowLayer = document.getElementById('glow-layer');
-
-function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-window.addEventListener('resize', resize); resize();
-
-// 기둥 클래스 (하늘색/분홍색 지원)
-class Pillar {
-  constructor() {
-    this.x = Math.random() * canvas.width;
-    this.width = Math.random() * 15 + 10;
-    this.opacity = 0.8;
-    // 하늘색(#00ffff)과 분홍색(#ff00ff) 중 랜덤 선택
-    this.color = Math.random() < 0.5 ? "#00ffff" : "#ff00ff";
-  }
-  update() {
-    this.width -= 0.6; 
-    this.opacity -= 0.02;
-  }
-  draw() {
-    ctx.save();
-    ctx.shadowBlur = 20;
-    ctx.shadowColor = this.color;
-    ctx.globalAlpha = this.opacity;
-    ctx.fillStyle = this.color;
-    ctx.fillRect(this.x - this.width / 2, 0, this.width, canvas.height);
-    ctx.restore();
-  }
-}
-
+/**
+ * ==================================================================================
+ * [4] 이펙트 엔진
+ * ==================================================================================
+ */
 class Particle {
-  constructor() {
-    this.x = Math.random() * canvas.width;
-    this.y = canvas.height + 10;
-    this.size = Math.random() * 5 + 2;
-    this.speedY = Math.random() * 5 + 3;
-    this.speedX = Math.random() * 6 - 3;
-    this.opacity = 1;
-    if (isSecondChance) {
-      const colors = ['#00ffff', '#ff00ff', '#ffff00'];
-      this.color = colors[Math.floor(Math.random() * colors.length)];
-    } else {
-      this.color = isFever ? '#ffcc00' : '#00ffcc';
+    constructor(x, y, color, size, vx, vy, life) {
+        this.x = x; this.y = y; this.color = color; this.size = size;
+        this.vx = vx; this.vy = vy; this.life = life; this.maxLife = life;
     }
-  }
-  update() { this.y -= this.speedY; this.opacity -= 0.01; }
-  draw() { ctx.fillStyle = this.color; ctx.globalAlpha = this.opacity; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
-}
-
-function animate() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
-  if ((combo > 0 || isFever) && Math.random() < 0.5) {
-    particles.push(new Particle());
-    if (isSecondChance && Math.random() < 0.3) {
-      pillars.push(new Pillar());
+    update(dt) {
+        this.x += this.vx * dt; this.y += this.vy * dt;
+        this.vy += GRAVITY * 0.3 * dt; // 파티클도 약한 중력 적용
+        this.life -= dt;
     }
-  }
-
-  for (let i = 0; i < pillars.length; i++) {
-    pillars[i].update();
-    pillars[i].draw();
-    if (pillars[i].width <= 0 || pillars[i].opacity <= 0) {
-      pillars.splice(i, 1);
-      i--;
+    draw() {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, this.life / this.maxLife);
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
     }
-  }
-
-  for (let i = 0; i < particles.length; i++) {
-    particles[i].update(); particles[i].draw();
-    if (particles[i].opacity <= 0) { particles.splice(i, 1); i--; }
-  }
-  requestAnimationFrame(animate);
 }
 
-function triggerLarpResurrection() {
-  clearInterval(timer);
-  hasResurrected = true;
-  isSecondChance = true;
-  const overlay = document.getElementById('larp-overlay');
-  const img = document.getElementById('larp-img');
-  overlay.style.display = 'flex';
-  overlay.style.opacity = '1';
-  img.style.transform = 'scale(1)';
-  setTimeout(() => {
-    overlay.style.opacity = '0';
-    overlay.style.transition = 'opacity 0.4s ease-out';
-    setTimeout(() => {
-      overlay.style.display = 'none';
-      time = 30;
-      document.getElementById('time').textContent = time;
-      document.getElementById('time').style.color = '#ff00ff'; 
-      startTimer();
-    }, 400);
-  }, 500);
-}
-
-function startGame() {
-  initReels();
-  animate();
-  document.getElementById('startScreen').classList.add('hidden');
-  document.getElementById('playScreen').classList.remove('hidden');
-  nextQuestion();
-  startTimer();
-}
-
-function startTimer() {
-  timer = setInterval(() => {
-    if (!isFever) {
-      time--;
-      document.getElementById('time').textContent = time;
-      if (time <= 0) {
-        if (!hasResurrected) triggerLarpResurrection();
-        else endGame();
-      }
+class FloatingText {
+    constructor(x, y, text, color, fontSize = 14) {
+        this.x = x; this.y = y; this.text = text; this.color = color;
+        this.life = 100; this.fontSize = fontSize;
     }
-  }, 1000);
-}
-
-function checkAnswer(button, answer) {
-  if (answer === correctAnswer) {
-    const isJackpot = spinSlots();
-    if (isJackpot) {
-        isFever = true;
-        document.getElementById('slotMachine').classList.add('fever-active');
-        setTimeout(() => { isFever = false; document.getElementById('slotMachine').classList.remove('fever-active'); }, 5000);
+    update(dt) { this.y -= 0.45 * dt; this.life -= dt; }
+    draw() {
+        ctx.save();
+        ctx.globalAlpha = Math.max(0, Math.min(1, this.life / 75));
+        ctx.fillStyle = this.color;
+        ctx.font = `bold ${this.fontSize}px 'Black Han Sans'`;
+        ctx.textAlign = "center";
+        ctx.fillText(this.text, this.x, this.y);
+        ctx.restore();
     }
-    combo += 1;
-    score += (10 + combo * 5) * (isJackpot ? 12 : 1);
-    button.classList.add('correct');
-    let color = isSecondChance ? ['rgba(0,255,255,0.8)', 'rgba(255,0,255,0.8)', 'rgba(255,255,0,0.8)'][combo % 3] : (isFever ? 'rgba(255,204,0,0.7)' : 'rgba(0,255,204,0.7)');
-    glowLayer.style.boxShadow = `inset 0 0 ${Math.min(combo*20, 160)}px ${color}`;
-  } else {
-    if (!isFever) {
-      combo = 0;
-      glowLayer.style.boxShadow = `inset 0 0 0px transparent`;
+}
+
+function spawnParticles(x, y, color, count) {
+    for (let i = 0; i < count; i++) {
+        particles.push(new Particle(
+            x, y, color,
+            Math.random() * 4 + 1,
+            (Math.random() - 0.5) * 22,
+            (Math.random() - 0.5) * 22,
+            40
+        ));
     }
-    button.classList.add('wrong');
-  }
-  document.getElementById('score').textContent = score;
-  document.getElementById('combo').textContent = combo;
-  setTimeout(nextQuestion, 400);
 }
 
-function nextQuestion() {
-  let a = Math.floor(Math.random() * 10) + 2;
-  let b = Math.floor(Math.random() * 10) + 2;
-  let op = ['+', '-', '*'][Math.floor(Math.random() * 3)];
-  if (op === '+') correctAnswer = a + b;
-  else if (op === '-') { if (a < b) [a, b] = [b, a]; correctAnswer = a - b; }
-  else correctAnswer = a * b;
-  document.getElementById('question').textContent = `${a} ${op} ${b}`;
-  let answers = [correctAnswer];
-  while (answers.length < 4) {
-    let wrong = correctAnswer + Math.floor(Math.random() * 10 - 5);
-    if (!answers.includes(wrong) && wrong >= 0) answers.push(wrong);
-  }
-  answers.sort(() => Math.random() - 0.5);
-  const choicesDiv = document.getElementById('choices');
-  choicesDiv.innerHTML = '';
-  answers.forEach(ans => {
-    let btn = document.createElement('button');
-    btn.textContent = ans;
-    btn.onclick = () => checkAnswer(btn, ans);
-    choicesDiv.appendChild(btn);
-  });
+/**
+ * ==================================================================================
+ * [5] HUD 렌더링 (V7.5: 스태미나 바, 가드 게이지 바 추가)
+ * ==================================================================================
+ */
+function drawHUD() {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+    // ── HP 바 배경 ──────────────────────────────────────────────────────────
+    ctx.fillStyle = "#121218";
+    ctx.fillRect(40, 28, 380, 18);
+    ctx.fillRect(580, 28, 380, 18);
+
+    // ── HP 바 ───────────────────────────────────────────────────────────────
+    ctx.fillStyle = "#3498db";
+    ctx.fillRect(40, 28, 380 * (p1.displayHp / 100), 18);
+    ctx.fillStyle = "#e74c3c";
+    ctx.fillRect(580 + 380 * (1 - p2.displayHp / 100), 28, 380 * (p2.displayHp / 100), 18);
+
+    // ── 스태미나 바 (HP 아래) ────────────────────────────────────────────────
+    ctx.fillStyle = "#1a1a10";
+    ctx.fillRect(40, 50, 380, 8);
+    ctx.fillRect(580, 50, 380, 8);
+
+    // 스태미나 색상: 정상(녹색) → 절반(주황) → 고갈(빨강 점멸)
+    let st1Color = p1.staminaExhausted
+        ? (frameCount % 20 < 10 ? "#ff4400" : "#660000")
+        : (p1.stamina > 50 ? "#2ecc71" : "#f39c12");
+    let st2Color = p2.staminaExhausted
+        ? (frameCount % 20 < 10 ? "#ff4400" : "#660000")
+        : (p2.stamina > 50 ? "#2ecc71" : "#f39c12");
+
+    ctx.fillStyle = st1Color;
+    ctx.fillRect(40, 50, 380 * (p1.displayStamina / STAMINA_MAX), 8);
+    ctx.fillStyle = st2Color;
+    ctx.fillRect(580 + 380 * (1 - p2.displayStamina / STAMINA_MAX), 50, 380 * (p2.displayStamina / STAMINA_MAX), 8);
+
+    // ── 가드 게이지 바 (스태미나 아래) ────────────────────────────────────────
+    ctx.fillStyle = "#0a0a18";
+    ctx.fillRect(40, 62, 380, 7);
+    ctx.fillRect(580, 62, 380, 7);
+
+    // 가드 게이지 색상: 정상(청록) → 낮음(붉음) → 브레이크(점멸)
+    let gg1Color = p1.isGuardBroken
+        ? (frameCount % 16 < 8 ? "#ff8800" : "#441100")
+        : (p1.guardGauge > 30 ? "#00aacc" : "#cc3300");
+    let gg2Color = p2.isGuardBroken
+        ? (frameCount % 16 < 8 ? "#ff8800" : "#441100")
+        : (p2.guardGauge > 30 ? "#00aacc" : "#cc3300");
+
+    ctx.fillStyle = gg1Color;
+    ctx.fillRect(40, 62, 380 * (p1.displayGuardGauge / GUARD_MAX), 7);
+    ctx.fillStyle = gg2Color;
+    ctx.fillRect(580 + 380 * (1 - p2.displayGuardGauge / GUARD_MAX), 62, 380 * (p2.displayGuardGauge / GUARD_MAX), 7);
+
+    // ── 게이지 라벨 ────────────────────────────────────────────────────────
+    ctx.font = "bold 11px Orbitron";
+    ctx.fillStyle = "#ffffff";
+    ctx.textAlign = "left";  ctx.fillText(`1P: ${p1.weapon.name}`, 40, 19);
+    ctx.textAlign = "right"; ctx.fillText(`2P: ${p2.weapon.name}`, 960, 19);
+
+    // 스태미나 라벨
+    ctx.font = "7px Orbitron";
+    ctx.fillStyle = "#666";
+    ctx.textAlign = "left";  ctx.fillText("STA", 42, 57);
+    ctx.textAlign = "right"; ctx.fillText("STA", 958, 57);
+    ctx.textAlign = "left";  ctx.fillText("GRD", 42, 68);
+    ctx.textAlign = "right"; ctx.fillText("GRD", 958, 68);
+
+    // ── 스킬 목록 ─────────────────────────────────────────────────────────
+    const renderSkillList = (p, startX, align) => {
+        p.weapon.skills.forEach((name, i) => {
+            let y = 105 + i * 40;
+            let ready = p.cooldowns[i] <= 0;
+
+            ctx.strokeStyle = "rgba(255,255,255,0.15)";
+            ctx.lineWidth = 1;
+            ctx.strokeRect(align === "L" ? startX : startX - 28, y, 28, 28);
+
+            if (!ready) {
+                let coolH = 28 * (p.cooldowns[i] / (p.weapon.cooldowns[i] / 16.6));
+                ctx.fillStyle = "rgba(255,255,255,0.2)";
+                ctx.fillRect(align === "L" ? startX : startX - 28, y + (28 - coolH), 28, Math.max(0, coolH));
+            }
+
+            ctx.fillStyle = ready ? "#fff" : "#444";
+            ctx.font = "11px 'Black Han Sans'";
+            ctx.textAlign = align === "L" ? "left" : "right";
+            ctx.fillText(name, align === "L" ? startX + 38 : startX - 38, y + 18);
+
+            ctx.font = "8px Orbitron";
+            ctx.fillStyle = "#777";
+            const keysHint = p.isP2 ? ["Y", "H", "P", "N"] : ["E", "R", "Q", "T"];
+            ctx.fillText(keysHint[i], align === "L" ? startX + 5 : startX - 23, y + 10);
+        });
+    };
+    renderSkillList(p1, 40, "L");
+    renderSkillList(p2, 960, "R");
+
+    // ── 공격 타입 표시 (중앙 상단) ────────────────────────────────────────
+    const atkTypeLabel = (type) => {
+        if (type === ATK_TYPE.SLASH)    return { txt: "◈ SLASH",    col: "#ffcc00" };
+        if (type === ATK_TYPE.THRUST)   return { txt: "▶ THRUST",   col: "#88ccff" };
+        if (type === ATK_TYPE.OVERHEAD) return { txt: "▼ OVERHEAD", col: "#ff8800" };
+        return { txt: "─", col: "#fff" };
+    };
+    let at1 = atkTypeLabel(p1.weapon ? p1.weapon.type : ATK_TYPE.SLASH);
+    let at2 = atkTypeLabel(p2.weapon ? p2.weapon.type : ATK_TYPE.SLASH);
+
+    ctx.font = "9px Orbitron";
+    ctx.textAlign = "left";
+    ctx.fillStyle = at1.col;
+    ctx.fillText(at1.txt, 42, 78);
+    ctx.textAlign = "right";
+    ctx.fillStyle = at2.col;
+    ctx.fillText(at2.txt, 958, 78);
 }
 
-function endGame() {
-  clearInterval(timer);
-  document.getElementById('playScreen').classList.add('hidden');
-  document.getElementById('endScreen').classList.remove('hidden');
-  document.getElementById('finalScore').textContent = score;
+/**
+ * ==================================================================================
+ * [6] 씬 전환
+ * ==================================================================================
+ */
+function transitionTo(scene) {
+    if (sceneTransitioning) return;
+    sceneTransitioning = true;
+
+    let fadeOut = setInterval(() => {
+        sceneAlpha -= 0.1;
+        if (sceneAlpha <= 0) {
+            clearInterval(fadeOut);
+            currentScene = scene;
+
+            if (scene === "SELECT") {
+                p1.init(200); p2.init(750);
+                p1.locked = false; p2.locked = false;
+            }
+
+            let fadeIn = setInterval(() => {
+                sceneAlpha += 0.1;
+                if (sceneAlpha >= 1) {
+                    sceneAlpha = 1;
+                    sceneTransitioning = false;
+                    clearInterval(fadeIn);
+                }
+            }, 30);
+        }
+    }, 30);
 }
+
+/**
+ * ==================================================================================
+ * [7] 컨트롤 정의
+ * ==================================================================================
+ */
+const p1Ctrls = {
+    up:      "KeyW",
+    left:    "KeyA",
+    right:   "KeyD",
+    down:    "KeyS",
+    jump:    "KeyG",   // V7.5 신규: 점프
+    attack:  "KeyF",
+    skill1:  "KeyE",
+    skill2:  "KeyR",
+    ult:     "KeyQ",
+    special: "KeyT"
+};
+
+const p2Ctrls = {
+    up:      ["ArrowUp",    "KeyI"],
+    left:    ["ArrowLeft",  "KeyJ"],
+    right:   ["ArrowRight", "KeyL"],
+    down:    ["ArrowDown",  "KeyK"],
+    jump:    ["KeyU"],               // V7.5 신규: 점프
+    attack:  ["Numpad0",   "KeyO"],
+    skill1:  ["Numpad1",   "KeyY"],
+    skill2:  ["Numpad2",   "KeyH"],
+    ult:     ["Enter",     "KeyP"],
+    special: ["Numpad3",   "KeyN"]
+};
+
+/**
+ * ==================================================================================
+ * [8] 메인 게임 루프
+ * ==================================================================================
+ */
+const p1 = new Player(200, "#3498db", p1Ctrls, false);
+const p2 = new Player(750, "#e74c3c", p2Ctrls, true);
+
+let lastTime = performance.now();
+
+function engineStep(timestamp) {
+    // Delta Time 계산 (60FPS 기준 1.0)
+    let dt = (timestamp - lastTime) / (1000 / 60);
+    lastTime = timestamp;
+    if (dt > 3) dt = 3; // 탭 전환 등 폭주 방지
+
+    // 히트스톱 중에는 렌더만 유지
+    if (hitStop > 0) {
+        hitStop -= dt;
+        requestAnimationFrame(engineStep);
+        return;
+    }
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, 1000, 600);
+
+    if (screenShake > 0) {
+        ctx.translate(
+            (Math.random() - 0.5) * screenShake,
+            (Math.random() - 0.5) * screenShake
+        );
+        screenShake *= Math.pow(0.95, dt);
+    }
+
+    ctx.globalAlpha = sceneAlpha;
+
+    // ── MENU 씬 ─────────────────────────────────────────────────────────────
+    if (currentScene === "MENU") {
+        ctx.textAlign = "center";
+
+        // 배경 그라디언트
+        ctx.fillStyle = "#000008";
+        ctx.fillRect(0, 0, 1000, 600);
+
+        // 타이틀
+        ctx.font = "bold 68px Orbitron";
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText("KENDO STRIKE", 500, 230);
+
+        ctx.font = "bold 22px Orbitron";
+        ctx.fillStyle = "#00ffff";
+        ctx.fillText("V7.5  TACTICAL WARFARE", 500, 272);
+
+        ctx.font = "12px Orbitron";
+        ctx.fillStyle = "#555";
+        ctx.fillText("STAMINA · GUARD GAUGE · AIR COMBAT · PRECISION HITBOX", 500, 308);
+
+        // 공격 타입 소개
+        ctx.font = "11px Orbitron";
+        ctx.fillStyle = "#ffcc00"; ctx.fillText("◈ SLASH — 넓은 호  베기  다단 히트", 500, 345);
+        ctx.fillStyle = "#88ccff"; ctx.fillText("▶ THRUST — 좁고  깊은  찌르기  정밀  판정", 500, 365);
+        ctx.fillStyle = "#ff8800"; ctx.fillText("▼ OVERHEAD — 가드  게이지  2배  소모  내려치기", 500, 385);
+
+        // 버튼
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(UI_BUTTONS.MENU_START.x, UI_BUTTONS.MENU_START.y, UI_BUTTONS.MENU_START.w, UI_BUTTONS.MENU_START.h);
+        ctx.fillStyle = "#000000";
+        ctx.font = "bold 18px 'Black Han Sans'";
+        ctx.fillText(UI_BUTTONS.MENU_START.text, 500, 480);
+    }
+
+    // ── SELECT 씬 ───────────────────────────────────────────────────────────
+    else if (currentScene === "SELECT") {
+        p1.draw(); p2.draw();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+        const drawSelectorUI = (p, x) => {
+            const w = WEAPONS[p.selIdx];
+            ctx.textAlign = "center";
+            ctx.fillStyle = p.locked ? "#2ecc71" : "#ffffff";
+            ctx.font = "bold 33px 'Black Han Sans'";
+            ctx.fillText(w.name, x, 170);
+
+            // 공격 타입 표시
+            let at = { txt: "─", col: "#fff" };
+            if (w.type === ATK_TYPE.SLASH)    at = { txt: "◈ SLASH",    col: "#ffcc00" };
+            if (w.type === ATK_TYPE.THRUST)   at = { txt: "▶ THRUST",   col: "#88ccff" };
+            if (w.type === ATK_TYPE.OVERHEAD) at = { txt: "▼ OVERHEAD", col: "#ff8800" };
+            ctx.font = "bold 13px Orbitron";
+            ctx.fillStyle = at.col;
+            ctx.fillText(at.txt, x, 195);
+
+            ctx.fillStyle = "#666";
+            ctx.font = "12px sans-serif";
+            ctx.fillText(w.sDesc, x, 218);
+
+            // 스탯 간단 표시
+            ctx.font = "10px Orbitron";
+            ctx.fillStyle = "#888";
+            ctx.fillText(`PWR:${w.power}  SPD:${w.speed}  STA:${w.staminaCost}  WT:${w.weight}`, x, 238);
+        };
+        drawSelectorUI(p1, 250);
+        drawSelectorUI(p2, 750);
+
+        ctx.fillStyle = "#444";
+        ctx.font = "11px Orbitron";
+        ctx.textAlign = "center";
+        ctx.fillText("NAVIGATE: A/D & ←/→ (또는 J/L)  |  LOCK: F & NUM0 (또는 O)", 500, 560);
+    }
+
+    // ── BATTLE 씬 ───────────────────────────────────────────────────────────
+    else if (currentScene === "BATTLE") {
+        // 지면
+        ctx.fillStyle = "#050508";
+        ctx.fillRect(0, 500, 1000, 100);
+
+        // 그림자 (공중일 때 흐려짐)
+        const drawShadow = (p) => {
+            let alpha = p.isOnGround ? 0.35 : Math.max(0.05, 0.35 - (GROUND_Y - p.y) * 0.002);
+            let scaleX = p.isOnGround ? 1 : Math.max(0.3, 1 - (GROUND_Y - p.y) * 0.005);
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = "#000";
+            ctx.beginPath();
+            ctx.ellipse(p.x + PLAYER_W/2, GROUND_Y + 80 + 5, 22 * scaleX, 6, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        };
+        drawShadow(p1);
+        drawShadow(p2);
+
+        p1.update(dt); p2.update(dt);
+        p1.draw();     p2.draw();
+
+        particles.forEach((p, i) => {
+            p.update(dt); p.draw();
+            if (p.life <= 0) particles.splice(i, 1);
+        });
+        floatingTexts.forEach((f, i) => {
+            f.update(dt); f.draw();
+            if (f.life <= 0) floatingTexts.splice(i, 1);
+        });
+
+        drawHUD();
+
+        // ── 승리 화면 ───────────────────────────────────────────────────────
+        if (p1.hp <= 0 || p2.hp <= 0) {
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.fillStyle = "rgba(0,0,0,0.85)";
+            ctx.fillRect(0, 0, 1000, 600);
+
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "50px Orbitron";
+            ctx.textAlign = "center";
+            ctx.fillText(p1.hp <= 0 ? "PLAYER 2 VICTORIOUS" : "PLAYER 1 VICTORIOUS", 500, 290);
+
+            ctx.fillStyle = "#e74c3c";
+            ctx.fillRect(UI_BUTTONS.RETRY.x, UI_BUTTONS.RETRY.y, UI_BUTTONS.RETRY.w, UI_BUTTONS.RETRY.h);
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "bold 18px 'Black Han Sans'";
+            ctx.fillText("REMATCH", 500, 458);
+        }
+    }
+
+    frameCount++;
+    requestAnimationFrame(engineStep);
+}
+
+/**
+ * ==================================================================================
+ * [9] 이벤트 인터페이스
+ * ==================================================================================
+ */
+canvas.addEventListener("mousedown", (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) * (1000 / rect.width);
+    const my = (e.clientY - rect.top)  * (600  / rect.height);
+
+    if (currentScene === "MENU") {
+        const b = UI_BUTTONS.MENU_START;
+        if (mx > b.x && mx < b.x + b.w && my > b.y && my < b.y + b.h) transitionTo("SELECT");
+    } else if (currentScene === "BATTLE") {
+        const b = UI_BUTTONS.RETRY;
+        if ((p1.hp <= 0 || p2.hp <= 0) && mx > b.x && mx < b.x + b.w && my > b.y && my < b.y + b.h) {
+            // 리매치: 선택창으로
+            particles.length = 0;
+            floatingTexts.length = 0;
+            transitionTo("SELECT");
+        }
+    }
+});
+
+document.addEventListener("keydown", (e) => {
+    keys[e.code] = true;
+
+    // ── SELECT 씬 키보드 처리 ────────────────────────────────────────────
+    if (currentScene === "SELECT") {
+        // P1 무기 탐색
+        if (!p1.locked) {
+            if (e.code === "KeyA") p1.selIdx = (p1.selIdx - 1 + WEAPONS.length) % WEAPONS.length;
+            if (e.code === "KeyD") p1.selIdx = (p1.selIdx + 1) % WEAPONS.length;
+            if (e.code === "KeyF") { p1.locked = true; p1.setWeapon(WEAPONS[p1.selIdx]); }
+        }
+        // P2 무기 탐색
+        if (!p2.locked) {
+            if (e.code === "ArrowLeft"  || e.code === "KeyJ") p2.selIdx = (p2.selIdx - 1 + WEAPONS.length) % WEAPONS.length;
+            if (e.code === "ArrowRight" || e.code === "KeyL") p2.selIdx = (p2.selIdx + 1) % WEAPONS.length;
+            if (e.code === "Numpad0"    || e.code === "KeyO") { p2.locked = true; p2.setWeapon(WEAPONS[p2.selIdx]); }
+        }
+        // 둘 다 잠금 시 전투 시작
+        if (p1.locked && p2.locked) transitionTo("BATTLE");
+    }
+});
+
+document.addEventListener("keyup", (e) => {
+    keys[e.code] = false;
+    // 패링 키 뗄 때 패링 윈도우 남아있으면 그냥 종료 (자동 페널티는 타임아웃)
+});
+
+// 게임 시작
+requestAnimationFrame(engineStep);
+
 </script>
 </body>
 </html>
